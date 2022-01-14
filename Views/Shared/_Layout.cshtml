@@ -1,0 +1,20 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Tally</title>
+    <link rel="stylesheet" href="~/lib/elementui/elementui.min.css" />
+</head>
+<body>
+    <div id="_vue_workplace" class="container">
+        @RenderBody()
+    </div>
+    <script src="~/lib/vue/vue.min.js"></script>
+    <script src="~/lib/elementui/elementui.min.js"></script>
+    <script src="~/lib/vue/axios.min.js"></script>
+    <script src="~/lib/vue/vue-loader.js"></script>
+    <script src="~/js/site.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
