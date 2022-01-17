@@ -1,0 +1,24 @@
+body {
+  margin: 0;
+}
+
+#_vue_workplace {
+  padding: 0;
+  margin: 0;
+  display: contents;
+}
+
+.el-header {
+  display: inline-block;
+  background-color: #000000;
+  color: white;
+  text-align: center;
+  height: 0;
+}
+
+.head {
+  display: inline-block;
+  height: 30px;
+  width: 100%;
+}
+/*# sourceMappingURL=index.css.map */

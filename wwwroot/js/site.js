@@ -12,7 +12,7 @@ function _vue_init() {
           };
         },
 		components: {
-			'test-component': httpVueLoader('../src/components/test.vue')
+			'index-component': httpVueLoader('../src/components/index.vue')
 		},
         methods: {
           handleClick(tab, event) {
