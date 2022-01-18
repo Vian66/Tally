@@ -1,4 +1,4 @@
-body{ margin:0} 
+body{ margin:0;ul li{list-style-type :none;}} 
 #_vue_workplace{padding: 0;margin: 0;display: contents;}
  
 
@@ -8,6 +8,27 @@ body{ margin:0}
     color: rgb(255, 255, 255);
     text-align: center;
     height: 0;
+  }
+  .projectInfo {
+      display: flex;
+    li{
+        padding: 10px;
+        font-size: 21px;
+        .el-button{
+            background-color: #1b1b1b;
+            border-color:#1b1b1b ;
+           
+        }
+        .btn{
+            background-color:#409EFF ;
+            border-color:#409EFF ;
+            color: #FFFFFF;
+        }
+    }
+    .right{
+        display: flex;
+        margin: 0 0 0 45px;
+    }
   }
   
   
