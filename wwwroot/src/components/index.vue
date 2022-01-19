@@ -19,7 +19,7 @@
           <li>TallyParent</li>
           <div class="right">
             <li>First node:</li>
-            <li><el-button size="small" type="primary">Add</el-button></li>
+            <li><el-button size="small" type="primary" @click='addTallyinpute(tallys)'>Add</el-button></li>
            <li>不顯示</li>
             <li>
               <el-switch v-model="value1"></el-switch>
@@ -41,23 +41,79 @@
     </nav>
 
     <!-- Tree -->
-     <el-tree
-      :data="data"
-      node-key="id"
-      default-expand-all
-      @node-drag-start="handleDragStart"
-      @node-drag-enter="handleDragEnter"
-      @node-drag-leave="handleDragLeave"
-      @node-drag-over="handleDragOver"
-      @node-drag-end="handleDragEnd"
-      @node-drop="handleDrop"
-      draggable
-      :allow-drop="allowDrop"
-      :allow-drag="allowDrag">
-      
-                    
-               
-    </el-tree>
+        <el-input
+          placeholder="搜尋名稱"
+          v-model="filterText">
+        </el-input>
+      <div class="elTree">
+        <el-tree
+          :data="tallys"
+          :props="defaultProps"
+          node-key="id"
+          default-expand-all
+          :ref="'tree'"
+          draggable
+          :expand-on-click-node="false"
+          :filter-node-method="filterNode"
+          @check-change="handleCheckChange">
+              <template #default="{ node, data }">
+                <span class="{'inputeBodr':custom-tree-node}">
+                          <input type="text" 
+                          maxlength="50"
+                          v-model="data.id" 
+                          v-if="data.inputeBodr" 
+                          @keyup.enter='data.inputeBodr = false'>
+                        
+                          <el-button size="mini" type="warning" 
+                          @click="edit(data)">{{data.id}}</el-button>
+                          <el-input
+                          clearable='true'
+                          v-model="data.TallyName" 
+                          placeholder="輸入内容" 
+                          size="small">
+                          </el-input>
+                            
+                          <span>
+                            <el-popover
+                                ref="popover"
+                                placement="right"
+                                :width="232"
+                                trigger="click"
+                              >
+                              <el-button 
+                              type="primary" 
+                              icon="el-icon-plus" circlsize="mini" circle 
+                              @click="append(node,data)">
+                              </el-button>
+
+                              <el-button 
+                              type="info"  
+                              icon="el-icon-upload2" circlsize="mini" circle 
+                              v-on:click='handleCheckChange(node, data,"up")'>
+                              </el-button>
+
+                              <el-button 
+                              type="info"
+                              icon="el-icon-download" circlsize="mini" circle  
+                              v-on:click='handleCheckChange(node, data,"down")'>
+                              </el-button>
+
+                              <el-button
+                              type="danger" 
+                              icon="el-icon-delete-solid" circle 
+                              @click="remove(node, data)">
+                              </el-button>
+                                <template #reference>
+                                  <el-button size='mini' icon='el-icon-more'></el-button>
+                                </template>
+                              </el-popover>
+                          </span>
+                        </span>
+                </template>
+                        
+                  
+        </el-tree>
+      </div>
       
   </el-container>
 </template>
@@ -71,41 +127,76 @@
         input: '',
         value: true,
         value1: true,
-         data: [],
-
+        filterText: '',
+        defaultProps: {children:'trotally',label: 'content',key:'id'},
+        tallys:[{content:'1515',inputeBodr: false,level:0,id:1,trotally:[]}],
+        layer:[],
+        tallyTag:0
+      }
+      
+    },
+    watch: {
+      filterText(val) {
+        this.$refs.tree.filter(val);
       }
     },
     methods: {
-        handleChange(file, fileList) {
+      handleChange(file, fileList) {
         this.fileList = fileList.slice(-3);
       },
-              handleDragStart(node, ev) {
-        console.log('drag start', node);
+      addTallyinpute(t){
+          if(this.tallys.length > 0)
+            this.tallyTag = this.tallys[this.tallys.length -1].id;
+            let pushTally = {content:'',inputeBodr: false,level:0,id:this.tallyTag+1,trotally:[]};
+            this.tallys.push(pushTally);
       },
-      handleDragEnter(draggingNode, dropNode, ev) {
-        console.log('tree drag enter: ', dropNode.label);
+      handleCheckChange(node,data,direct) {
+                  const parent = node.parent;
+                  const children = parent.data.trotally || parent.data;
+                  const index = children.findIndex((d) =>d.id === data.id);
+                  switch(direct){
+                    case 'up':
+                        if(index >0){
+                          let item = children.splice(index, 1)[0]
+                              children.splice(index - 1, 0, item)
+                              this.tallys = [...this.tallys];
+                        }
+                    break;  
+                    case 'down':
+                        if(index <children.length){
+                          let item = children.splice(index, 1)[0]
+                              children.splice(index + 1, 0, item)
+                              this.tallys = [...this.tallys]; 
+                        }
+                    break; 
+                  }
+        },
+      append(node,data) { 
+        let tallyTag = 1;
+       if(data.trotally.length >0){
+         let aID = data.trotally[data.trotally.length-1].id.split('-');
+       tallyTag += parseInt(aID[aID.length-1]);
+       }
+      const newChild = {content:'',inputeBodr: false,level:1,id:data.id+'-'+(tallyTag),trotally:[]}
+      if (!data.trotally)data.trotally = [];
+      data.trotally.push(newChild);
+      this.tallys = [...this.tallys];
       },
-      handleDragLeave(draggingNode, dropNode, ev) {
-        console.log('tree drag leave: ', dropNode.label);
+
+      remove(node, data) {
+        const parent = node.parent;
+        const children = parent.data.trotally || parent.data;
+        const index = children.findIndex(d => d.id === data.id);
+        children.splice(index, 1);
+        this.tallys = [...this.tallys];
       },
-      handleDragOver(draggingNode, dropNode, ev) {
-        console.log('tree drag over: ', dropNode.label);
+      filterNode(value, data) {
+        if (!value) return true;
+        return data.label.indexOf(value) !== -1;
       },
-      handleDragEnd(draggingNode, dropNode, dropType, ev) {
-        console.log('tree drag end: ', dropNode && dropNode.label, dropType);
-      },
-      handleDrop(draggingNode, dropNode, dropType, ev) {
-        console.log('tree drop: ', dropNode.label, dropType);
-      },
-      allowDrop(draggingNode, dropNode, type) {
-        if (dropNode.data.label === '二级 3-1') {
-          return type !== 'inner';
-        } else {
-          return true;
-        }
-      },
-      allowDrag(draggingNode) {
-        return draggingNode.data.label.indexOf('三级 3-2-2') === -1;
+      edit(d){
+        console.log(d)
+        d.inputeBodr = true;
       }
     }
   }

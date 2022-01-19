@@ -48,4 +48,12 @@ body ul li {
   display: flex;
   margin: 0 0 0 45px;
 }
+
+.elTree {
+  margin: 10px;
+}
+
+.elTree .el-tree-node {
+  margin: 12px 0;
+}
 /*# sourceMappingURL=index.css.map */

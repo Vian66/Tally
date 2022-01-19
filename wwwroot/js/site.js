@@ -11,9 +11,9 @@ function _vue_init() {
             sys_path: ''
           };
         },
-		components: {
-			'index-component': httpVueLoader('../src/components/index.vue')
-		},
+        components: {
+          'index-component': httpVueLoader('../src/components/index.vue')
+        },
         methods: {
           handleClick(tab, event) {
             console.log(tab, event);
@@ -24,3 +24,5 @@ function _vue_init() {
     var Ctor = Vue.extend(Main)
     __vm = new Ctor().$mount('#_vue_workplace')
 }
+
+
