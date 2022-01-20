@@ -60,15 +60,18 @@
                 <span class="{'inputeBodr':custom-tree-node}">
                           <input type="text" 
                           maxlength="50"
-                          v-model="data.id" 
-                          v-if="data.inputeBodr" 
-                          @keyup.enter='data.inputeBodr = false'>
-                        
+                          size="30"
+                          v-model="data.eid" 
+                          v-if="data.inputeBodr"
+                          @keydown.enter='data.inputeBodr = false'
+                          >
+                          
+
                           <el-button size="mini" type="warning" 
-                          @click="edit(data)">{{data.id}}</el-button>
+                          @click="edit(data)">{{data.eid}}</el-button>
                           <el-input
                           clearable='true'
-                          v-model="data.TallyName" 
+                          v-model="data.content" 
                           placeholder="輸入内容" 
                           size="small">
                           </el-input>
@@ -129,7 +132,7 @@
         value1: true,
         filterText: '',
         defaultProps: {children:'trotally',label: 'content',key:'id'},
-        tallys:[{content:'1515',inputeBodr: false,level:0,id:1,trotally:[]}],
+        tallys:[{content:'1515',inputeBodr: false,level:0,id:1,trotally:[],eid:1}],
         layer:[],
         tallyTag:0
       }
@@ -146,8 +149,8 @@
       },
       addTallyinpute(t){
           if(this.tallys.length > 0)
-            this.tallyTag = this.tallys[this.tallys.length -1].id;
-            let pushTally = {content:'',inputeBodr: false,level:0,id:this.tallyTag+1,trotally:[]};
+            this.tallyTag = this.tallys[this.tallys.length -1].eid;
+            let pushTally = {content:'',inputeBodr: false,level:0,id:parseInt(this.tallyTag)+1,trotally:[],eid:parseInt(this.tallyTag)+1};
             this.tallys.push(pushTally);
       },
       handleCheckChange(node,data,direct) {
@@ -174,13 +177,13 @@
       append(node,data) { 
         let tallyTag = 1;
        if(data.trotally.length >0){
-         let aID = data.trotally[data.trotally.length-1].id.split('-');
-       tallyTag += parseInt(aID[aID.length-1]);
+         let aID = data.trotally[data.trotally.length-1].eid.split('-');
+          tallyTag += parseInt(aID[aID.length-1]);
        }
-      const newChild = {content:'',inputeBodr: false,level:1,id:data.id+'-'+(tallyTag),trotally:[]}
-      if (!data.trotally)data.trotally = [];
-      data.trotally.push(newChild);
-      this.tallys = [...this.tallys];
+        const newChild = {content:'',inputeBodr: false,level:1,id:data.id+'-'+(tallyTag),trotally:[],eid:data.id+'-'+(tallyTag)}
+        if (!data.trotally)data.trotally = [];//沒有資料就給空陣列
+        data.trotally.push(newChild);//塞資料
+        this.tallys = [...this.tallys];
       },
 
       remove(node, data) {
@@ -192,7 +195,7 @@
       },
       filterNode(value, data) {
         if (!value) return true;
-        return data.label.indexOf(value) !== -1;
+        return data.content.indexOf(value) !== -1;//回傳 -1，表示找不到
       },
       edit(d){
         console.log(d)
