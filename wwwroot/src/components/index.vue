@@ -5,9 +5,35 @@
       <div class="container-fluid">
         <ul class="projectInfo">
           <li>專案:</li>
-          <li><el-input
-              size="small"
-             v-model="input" placeholder="請選擇專案"></el-input>
+          <li>
+            <el-select v-model="select" placeholder="請選擇專案"
+            v-model="select"
+            @change='ReadyTally'
+            >
+            
+                 <!-- <el-option
+                 v-for="s in selectTally"
+                 :key="s.ProjectID"
+                 :label="s.ProjectName"
+                 :value="s.ProjectID">
+                </el-option> -->
+          </el-select> 
+              <select name="" id="" @click='ReadyTally'>
+                <option v-for="s in selectTally" 
+                :key="s.ProjectID" :value="s.ProjectID"></option>
+              </select>
+             <!-- <select  
+              placeholder="請選擇專案" 
+              @click='ReadyTally'
+              v-model="select"
+              >
+                  <option
+                    :value="selectTally"
+                    v-for="item in selectTally"
+                    {{item}}
+                  >
+                  </option>
+              </select> -->
           </li>
           <li>Tally</li>
           <li><el-switch
@@ -127,14 +153,15 @@
     ],
     data() {
       return {
-        input: '',
+        select: '',
         value: true,
         value1: true,
         filterText: '',
         defaultProps: {children:'trotally',label: 'content',key:'id'},
         tallys:[{content:'1515',inputeBodr: false,level:0,id:1,trotally:[],eid:1}],
         layer:[],
-        tallyTag:0
+        tallyTag:0,
+        selectTally:[]
       }
       
     },
@@ -143,7 +170,34 @@
         this.$refs.tree.filter(val);
       }
     },
+    created() {
+      // axios.post('https://localhost:5001/API/ReadTally',{})
+      //   .then((res) => {
+      //       console.log('成功select',res.data.NewDataSet.TallyProject)
+      //       res.data.NewDataSet.TallyProject = this.select;
+      //       let ddt = '';
+      //       res.data.NewDataSet.TallyProject = ddt;
+           
+      //   })
+      //   .catch((err) => {
+      //     console.log('失敗',err)
+          
+      //   })
+    },
     methods: {
+      ReadyTally(){
+        axios.post('https://localhost:5001/API/ReadTally',{})
+        .then((res) => {
+            console.log('成功select',res.data.NewDataSet.TallyProject)
+            res.data.NewDataSet.TallyProject = this.selectTally;
+            console.log(this.selectTally)
+           
+        })
+        .catch((err) => {
+          console.log('失敗',err)
+          
+        })
+      },
       handleChange(file, fileList) {
         this.fileList = fileList.slice(-3);
       },

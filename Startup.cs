@@ -26,6 +26,9 @@ namespace Tally
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
+            // HttpClient
+            services.AddHttpClient ();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

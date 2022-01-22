@@ -8,8 +8,8 @@ using System.Net.Http;
 using System.Xml.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using XElement;
 using Microsoft.Extensions.Configuration; //for Config
+using Tally.MyClass;
 using Tally.Models;
 
 namespace Tally.Controllers
@@ -19,8 +19,12 @@ namespace Tally.Controllers
     public class APIController : ControllerBase
     {
         private readonly IConfiguration _config;
-        public APIController(IConfiguration config){
+        private IHttpClientFactory _clientFactory;
+        Compress oCompress = new Compress();
+        EncodeHelper oEncodeHelper = new EncodeHelper();
+        public APIController(IConfiguration config, IHttpClientFactory clientFactory){
             _config = config;
+            _clientFactory = clientFactory;
         }
 
         [HttpPost]
