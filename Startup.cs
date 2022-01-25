@@ -29,6 +29,11 @@ namespace Tally
 
             // HttpClient
             services.AddHttpClient ();
+
+            // Newtonsoft.Json
+            services.AddControllers ().AddNewtonsoftJson ();
+            services.AddControllersWithViews ().AddNewtonsoftJson ();
+            services.AddRazorPages ().AddNewtonsoftJson ();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

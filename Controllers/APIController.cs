@@ -58,6 +58,7 @@ namespace Tally.Controllers
         [HttpPost]
         [Route ("[action]")]
         public string SelectTally (JObject oJObject) {
+        //public string SelectTally (object oJObject) {
             JObject jGetDataByte = new JObject ();
             jGetDataByte.Add (new JProperty ("EncodeServerName", oEncodeHelper.EnryptString ("W08DBRD01")));
             jGetDataByte.Add (new JProperty ("EncodeDBName", oEncodeHelper.EnryptString ("CS_V2_RD")));
