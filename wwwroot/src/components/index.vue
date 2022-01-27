@@ -47,17 +47,20 @@
         </ul>
       </div>
     </nav>
-
+     
     <!-- Tree -->
         <el-input
           placeholder="搜尋名稱"
           v-model="filterText">
         </el-input>
+         {{tallys}}
+         <!-- { "TallyName": "", "inputeBodr": false, "level": 0, "TallyID": 1, "trotally": [], "eid": 1 } -->
+         <!-- {{"ProjectID": "79", "LocaleID": "zh-tw", "TallyID": "1", "TallyName": "產品相關", "TallyLevel": "1", "TallyParent": "0", "SortCode": "1", "DeleteFlag": "N", "NodeType": "FOLDER" }} -->
       <div class="elTree">
         <el-tree
           :data="tallys"
           :props="defaultProps"
-          node-key="id"
+          node-key="TallyID"
           default-expand-all
           :ref="'tree'"
           draggable
@@ -69,17 +72,17 @@
                           <input type="text" 
                           maxlength="50"
                           size="30"
-                          v-model="data.eid" 
+                          v-model="data.TallyID" 
                           v-if="data.inputeBodr"
                           @keydown.enter='data.inputeBodr = false'
                           >
                           
 
                           <el-button size="mini" type="warning" 
-                          @click="edit(data)">{{data.eid}}</el-button>
+                          @click="edit(data)">{{data.TallyID}}</el-button>
                           <el-input
                           clearable='true'
-                          v-model="data.content" 
+                          v-model="data.TallyName" 
                           placeholder="輸入内容" 
                           size="small">
                           </el-input>
@@ -140,7 +143,7 @@
         value1: true,
         filterText: '',
         defaultProps: {children:'trotally',label: 'content',key:'id'},
-        tallys:[{content:'1515',inputeBodr: false,level:0,id:1,trotally:[],eid:1}],
+        tallys:[{TallyName:'',inputeBodr: false,TallyLevel:1,TallyID:1,trotally:[],eid:1}],
         layer:[],
         tallyTag:0,
         selectTally:[]
@@ -150,56 +153,41 @@
     watch: {
       filterText(val) {
         this.$refs.tree.filter(val);
-      }
+      },
     },
     created() {
       axios.post('https://localhost:5001/API/ReadTally',{})
-        .then((res) => {
-            //console.log('成功select',res.data.NewDataSet.TallyProject)
-            //res.data.NewDataSet.TallyProject = this.selectTally;
-            this.selectTally = res.data.NewDataSet.TallyProject
-           
-           
-        })
-        .catch((err) => {
-          console.log('失敗',err)
-          
-        })
+        .then((res) => {this.selectTally = res.data.NewDataSet.TallyProject})
+        .catch((err) => {console.log('失敗',err)})
     },
     methods: {
       contextTally(p){
-        let Param = {}
-        // axios.post('https://localhost:5001/API/SelectTally',{
-        //   Param:{
-        //       ProjectID:'180',
-        //       LocaleID:'zh-TW'
-             
-        //     }
-        // })
-        // .then((res) => {
-        //     console.log('成功select',res)
-        //     //this.selectTally = res.data.NewDataSet.TallyProject
-            
-           
-        // })
-        // .catch((err) => {
-        //   console.log('失敗',err)
-          
-        // })
-        const oheaders = {
-  'Content-Type': 'application/json'
-  }
         axios.post('https://localhost:5001/API/SelectTally',{
                 ProjectID:p,
                 LocaleID:'zh-TW'
         })
         .then((res) => {
             console.log('成功select',res)
-            //apiTally.Selectally = res.data.NewDataSet.QueryTally;//跑回圈
-            //apiTally.Selectally.push(tallys)
+             if(!res.data.NewDataSet?.QueryTally){
+                let alert = this.$notify({
+                  title: '訊息',
+                  message: `此專案ProjectID:${p}暫無資料`,
+                  type: 'warning'
+                });
+                this.tallys = [{TallyName:'',inputeBodr:false,TallyLevel:1,TallyID:1,trotally:[],eid:1}];
+                res.data.NewDataSet.QueryTally??this.tallys 
+                return alert 
+              }
+              res.data.NewDataSet.QueryTally.forEach((val,i,arr) => {
+                    this.tallys = arr
+
+              })
+             
         })
         .catch((err) => {
+          //err ?.data
           console.log('失敗',err)
+          //console.log(err ?.data)
           
         })
           
@@ -212,7 +200,7 @@
       addTallyinpute(t){
           if(this.tallys.length > 0)
             this.tallyTag = this.tallys[this.tallys.length -1].eid;
-            let pushTally = {content:'',inputeBodr: false,level:0,id:parseInt(this.tallyTag)+1,trotally:[],eid:parseInt(this.tallyTag)+1};
+            let pushTally = {TallyName:'',inputeBodr: false,TallyLevel:1,TallyID:parseInt(this.tallyTag)+1,trotally:[],eid:parseInt(this.tallyTag)+1};
             this.tallys.push(pushTally);
       },
       handleCheckChange(node,data,direct) {
@@ -242,7 +230,7 @@
          let aID = data.trotally[data.trotally.length-1].eid.split('-');
           tallyTag += parseInt(aID[aID.length-1]);
        }
-        const newChild = {content:'',inputeBodr: false,level:1,id:data.id+'-'+(tallyTag),trotally:[],eid:data.id+'-'+(tallyTag)}
+        const newChild = {TallyName:'',inputeBodr: false,TallyLevel:2,TallyID:data.TallyID+'0'+(tallyTag),trotally:[],eid:data.TallyID+'0'+(tallyTag)}
         if (!data.trotally)data.trotally = [];//沒有資料就給空陣列
         data.trotally.push(newChild);//塞資料
         this.tallys = [...this.tallys];
@@ -257,7 +245,7 @@
       },
       filterNode(value, data) {
         if (!value) return true;
-        return data.content.indexOf(value) !== -1;//回傳 -1，表示找不到
+        return data.TallyName.indexOf(value) !== -1;//回傳 -1，表示找不到
       },
       edit(d){
         console.log(d)
