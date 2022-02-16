@@ -11,9 +11,9 @@
                 @change="contextTally"
             >
                  <el-option
-                 v-for="s in selectTally"
+                 v-for="(s,index) in selectTally"
                  :label="s.ProjectName"
-                 :key="s.ProjectID"
+                 :key="s.ProjectID + index"
                  :value="s.ProjectID">
                 </el-option>
           </li>
@@ -53,17 +53,18 @@
           placeholder="搜尋名稱"
           v-model="filterText">
         </el-input>
-         {{tallys}}
+         <!-- {{TallyLevelTest}} -->
          <!-- { "TallyName": "", "inputeBodr": false, "level": 0, "TallyID": 1, "trotally": [], "eid": 1 } -->
          <!-- {{"ProjectID": "79", "LocaleID": "zh-tw", "TallyID": "1", "TallyName": "產品相關", "TallyLevel": "1", "TallyParent": "0", "SortCode": "1", "DeleteFlag": "N", "NodeType": "FOLDER" }} -->
       <div class="elTree">
         <el-tree
           :data="tallys"
           :props="defaultProps"
-          node-key="TallyID"
+          node-key="id"
           default-expand-all
           :ref="'tree'"
           draggable
+          :render-after-expand="true"
           :expand-on-click-node="false"
           :filter-node-method="filterNode"
           @check-change="handleCheckChange">
@@ -71,7 +72,6 @@
                 <span class="{'inputeBodr':custom-tree-node}">
                           <input type="text" 
                           maxlength="50"
-                          size="30"
                           v-model="data.TallyID" 
                           v-if="data.inputeBodr"
                           @keydown.enter='data.inputeBodr = false'
@@ -79,9 +79,9 @@
                           
 
                           <el-button size="mini" type="warning" 
-                          @click="edit(data)">{{data.TallyID}}</el-button>
+                          @click="edit(node,data)">{{data.TallyID}}</el-button>
                           <el-input
-                          clearable='true'
+                          :clearable='true'
                           v-model="data.TallyName" 
                           placeholder="輸入内容" 
                           size="small">
@@ -132,6 +132,12 @@
   </el-container>
 </template>
 <script>
+  const defaultTally = {
+    TallyName:'',inputeBodr: false,
+    TallyLevel:1,TallyID:1,
+    trotally:[],id:1,
+    TallyParent:0,SortCode:1,
+  }
   module.exports = {
     props: [
       "sys_path"
@@ -142,11 +148,12 @@
         value: true,
         value1: true,
         filterText: '',
-        defaultProps: {children:'trotally',label: 'content',key:'id'},
-        tallys:[{TallyName:'',inputeBodr: false,TallyLevel:1,TallyID:1,trotally:[],eid:1}],
+        defaultProps: {children:'trotally',label: 'TallyID',key:'id'},
+        tallys:[defaultTally],
         layer:[],
         tallyTag:0,
-        selectTally:[]
+        selectTally:[],
+        TallyLevelTest:[]
       }
       
     },
@@ -163,50 +170,85 @@
     methods: {
       contextTally(p){
         axios.post('https://localhost:5001/API/SelectTally',{
-                ProjectID:p,
+          ProjectID:p,
                 LocaleID:'zh-TW'
         })
         .then((res) => {
-            console.log('成功select',res)
+          console.log('成功select',res)
+            //console.log('this.tallys',this.tallys)
              if(!res.data.NewDataSet?.QueryTally){
+               //console.log('this.tallys',this.tallys)
                 let alert = this.$notify({
                   title: '訊息',
                   message: `此專案ProjectID:${p}暫無資料`,
                   type: 'warning'
                 });
-                this.tallys = [{TallyName:'',inputeBodr:false,TallyLevel:1,TallyID:1,trotally:[],eid:1}];
-                res.data.NewDataSet.QueryTally??this.tallys 
+                this.tallys = [defaultTally];
+                // res.data.NewDataSet.QueryTally??this.tallys 
                 return alert 
               }
-              res.data.NewDataSet.QueryTally.forEach((val,i,arr) => {
-                    this.tallys = arr
+              // res.data.NewDataSet.QueryTally.forEach((val,i,arr) => {
+              //       arr[i]['inputeBodr'] = false;
+              //       arr[i]['trotally'] = [];
+              //       this.tallys = arr
+              //          //let arr= arr[i].TallyLevel
+              //          //console.log('TallyLevel',arr[i+1].TallyLevel)
+              //       //   arr[i-1].trotally = [...arr[i]]
+              //       //   console.log('trotally',arr[i-1].trotally)
+              //       this.TallyLevelTest = this.tallys.filter((val, i, arr) => {
+              //         if(arr[i].TallyLevel>1) return true})
+              //       //console.log(this.TallyLevelTestTallyID)
+              //       this.TallyLevelTest.forEach((val, i, arr) => {
+              //         //console.log(arr)
+              //       })
 
-              })
-             
+                    
+              // })
+              // TallyLevel TallyID TallyParent
+
+              const tallyObj =  res.data.NewDataSet.QueryTally.reduce((obj,tally)=>{
+                console.log('obj',obj,'tally',tally);
+                !obj[tally.TallyLevel]? obj[tally.TallyLevel] = [tally] : obj[tally.TallyLevel].push(tally)
+                return obj
+              },{})
+              for(let i = Object.keys(tallyObj).length;i>0;i--){
+                if(i === 1) break
+                for(const tally of tallyObj[i]){
+                  const parentId = tally.TallyParent
+                  const parentIndex = tallyObj[i-1].findIndex(e=>e.TallyID===parentId)
+                  const parent = tallyObj[i-1][parentIndex]
+                  parent['trotally']
+                    ? parent['trotally'].push(tally)
+                    : parent['trotally'] = [tally]
+                    parent['inputeBodr'] = false;
+                }
+              }
+              this.tallys = tallyObj[1]
         })
         .catch((err) => {
-          //err ?.data
-          console.log('失敗',err)
-          //console.log(err ?.data)
-          
-        })
-          
-          
-          
+          console.log('失敗',err)  
+        })   
       },
       handleChange(file, fileList) {
         this.fileList = fileList.slice(-3);
       },
       addTallyinpute(t){
           if(this.tallys.length > 0)
-            this.tallyTag = this.tallys[this.tallys.length -1].eid;
-            let pushTally = {TallyName:'',inputeBodr: false,TallyLevel:1,TallyID:parseInt(this.tallyTag)+1,trotally:[],eid:parseInt(this.tallyTag)+1};
+            this.tallyTag = this.tallys[this.tallys.length -1].TallyID;
+            let pushTally = {
+              TallyName:'',inputeBodr: false,
+              TallyLevel:1,TallyID:parseInt(this.tallyTag)+1,
+              trotally:[],id:parseInt(this.tallyTag)+1,
+              TallyParent:0,SortCode:1};
             this.tallys.push(pushTally);
       },
       handleCheckChange(node,data,direct) {
+                  console.log('node',node)
+                  console.log('data',data)
                   const parent = node.parent;
                   const children = parent.data.trotally || parent.data;
-                  const index = children.findIndex((d) =>d.id === data.id);
+                  console.log('children',children.length)
+                  const index = children.findIndex((d) => d.TallyID === data.TallyID);
                   switch(direct){
                     case 'up':
                         if(index >0){
@@ -223,14 +265,17 @@
                         }
                     break; 
                   }
-        },
+      },
       append(node,data) { 
         let tallyTag = 1;
        if(data.trotally.length >0){
-         let aID = data.trotally[data.trotally.length-1].eid.split('-');
+         //let aID = data.trotally[data.trotally.length-1].TallyID.split('-');
+         let aID = data.trotally[data.trotally.length-1].TallyID;
           tallyTag += parseInt(aID[aID.length-1]);
        }
-        const newChild = {TallyName:'',inputeBodr: false,TallyLevel:2,TallyID:data.TallyID+'0'+(tallyTag),trotally:[],eid:data.TallyID+'0'+(tallyTag)}
+        const newChild = {TallyName:'',inputeBodr: false,
+        TallyLevel:2,TallyID:data.TallyID+'0'+(tallyTag),
+        trotally:[],id:data.TallyID+'0'+(tallyTag),SortCode:1}
         if (!data.trotally)data.trotally = [];//沒有資料就給空陣列
         data.trotally.push(newChild);//塞資料
         this.tallys = [...this.tallys];
@@ -239,7 +284,7 @@
       remove(node, data) {
         const parent = node.parent;
         const children = parent.data.trotally || parent.data;
-        const index = children.findIndex(d => d.id === data.id);
+        const index = children.findIndex(d => d.TallyID === data.TallyID);
         children.splice(index, 1);
         this.tallys = [...this.tallys];
       },
@@ -247,10 +292,17 @@
         if (!value) return true;
         return data.TallyName.indexOf(value) !== -1;//回傳 -1，表示找不到
       },
-      edit(d){
-        console.log(d)
-        d.inputeBodr = true;
-      }
+      edit(node,data){
+        const parent = node.parent;
+        const children = parent.data.trotally || parent.data;
+        console.log('children',children)
+        const index = children.findIndex((d) => d.inputeBodr === data.inputeBodr);
+        //const index = children.findIndex((d) => console.log('d',d));
+        
+        //d.inputeBodr = true;
+        //console.log('edit',index)
+        },
+
     }
   }
 </script>
