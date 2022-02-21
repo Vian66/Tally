@@ -53,9 +53,6 @@
           placeholder="搜尋名稱"
           v-model="filterText">
         </el-input>
-         <!-- {{TallyLevelTest}} -->
-         <!-- { "TallyName": "", "inputeBodr": false, "level": 0, "TallyID": 1, "trotally": [], "eid": 1 } -->
-         <!-- {{"ProjectID": "79", "LocaleID": "zh-tw", "TallyID": "1", "TallyName": "產品相關", "TallyLevel": "1", "TallyParent": "0", "SortCode": "1", "DeleteFlag": "N", "NodeType": "FOLDER" }} -->
       <div class="elTree">
         <el-tree
           :data="tallys"
@@ -70,16 +67,19 @@
           @check-change="handleCheckChange">
               <template #default="{ node, data }">
                 <span class="{'inputeBodr':custom-tree-node}">
+
                           <input type="text" 
                           maxlength="50"
                           v-model="data.TallyID" 
-                          v-if="data.inputeBodr"
+                          v-show="data.inputeBodr"
                           @keydown.enter='data.inputeBodr = false'
-                          >
                           
-
-                          <el-button size="mini" type="warning" 
-                          @click="edit(node,data)">{{data.TallyID}}</el-button>
+                          >
+                          <!-- @keydown.enter='data.inputeBodr = false' -->
+                          <!--  v-if="data.inputeBodr" -->
+                          <el-button size="mini" type="warning"
+                          @click="edit(node,data)"
+                          >{{data.TallyID}}</el-button>
                           <el-input
                           :clearable='true'
                           v-model="data.TallyName" 
@@ -138,9 +138,10 @@
     trotally:[],id:1,
     TallyParent:0,SortCode:1,
   }
-  module.exports = {
+   module.exports = {
     props: [
       "sys_path"
+      //'async-webpack-example'
     ],
     data() {
       return {
@@ -175,7 +176,7 @@
         })
         .then((res) => {
           console.log('成功select',res)
-            //console.log('this.tallys',this.tallys)
+            console.log('this.tallys',this.tallys)
              if(!res.data.NewDataSet?.QueryTally){
                //console.log('this.tallys',this.tallys)
                 let alert = this.$notify({
@@ -184,46 +185,30 @@
                   type: 'warning'
                 });
                 this.tallys = [defaultTally];
-                // res.data.NewDataSet.QueryTally??this.tallys 
                 return alert 
               }
-              // res.data.NewDataSet.QueryTally.forEach((val,i,arr) => {
-              //       arr[i]['inputeBodr'] = false;
-              //       arr[i]['trotally'] = [];
-              //       this.tallys = arr
-              //          //let arr= arr[i].TallyLevel
-              //          //console.log('TallyLevel',arr[i+1].TallyLevel)
-              //       //   arr[i-1].trotally = [...arr[i]]
-              //       //   console.log('trotally',arr[i-1].trotally)
-              //       this.TallyLevelTest = this.tallys.filter((val, i, arr) => {
-              //         if(arr[i].TallyLevel>1) return true})
-              //       //console.log(this.TallyLevelTestTallyID)
-              //       this.TallyLevelTest.forEach((val, i, arr) => {
-              //         //console.log(arr)
-              //       })
-
-                    
-              // })
-              // TallyLevel TallyID TallyParent
 
               const tallyObj =  res.data.NewDataSet.QueryTally.reduce((obj,tally)=>{
-                console.log('obj',obj,'tally',tally);
-                !obj[tally.TallyLevel]? obj[tally.TallyLevel] = [tally] : obj[tally.TallyLevel].push(tally)
+                tally['inputeBodr'] = false;
+                obj[tally.TallyLevel]
+                  ? obj[tally.TallyLevel].push(tally) 
+                  : obj[tally.TallyLevel] = [tally]
                 return obj
               },{})
-              for(let i = Object.keys(tallyObj).length;i>0;i--){
-                if(i === 1) break
+
+              for(let i = Object.keys(tallyObj).length;i>=2;i--){
+                //if(i===1)break  
+                //console.log(tallyObj);                
+                this.tallys = tallyObj[1]
                 for(const tally of tallyObj[i]){
                   const parentId = tally.TallyParent
                   const parentIndex = tallyObj[i-1].findIndex(e=>e.TallyID===parentId)
-                  const parent = tallyObj[i-1][parentIndex]
-                  parent['trotally']
-                    ? parent['trotally'].push(tally)
-                    : parent['trotally'] = [tally]
-                    parent['inputeBodr'] = false;
+                  const parent = tallyObj[i-1][parentIndex] 
+                  parent['trotally'] 
+                  ? parent['trotally'].push(tally) 
+                  : parent['trotally'] = [tally]
                 }
               }
-              this.tallys = tallyObj[1]
         })
         .catch((err) => {
           console.log('失敗',err)  
@@ -269,7 +254,6 @@
       append(node,data) { 
         let tallyTag = 1;
        if(data.trotally.length >0){
-         //let aID = data.trotally[data.trotally.length-1].TallyID.split('-');
          let aID = data.trotally[data.trotally.length-1].TallyID;
           tallyTag += parseInt(aID[aID.length-1]);
        }
@@ -293,16 +277,15 @@
         return data.TallyName.indexOf(value) !== -1;//回傳 -1，表示找不到
       },
       edit(node,data){
+        //console.log(data)
         const parent = node.parent;
         const children = parent.data.trotally || parent.data;
-        console.log('children',children)
-        const index = children.findIndex((d) => d.inputeBodr === data.inputeBodr);
-        //const index = children.findIndex((d) => console.log('d',d));
-        
-        //d.inputeBodr = true;
-        //console.log('edit',index)
-        },
+        //console.log('children',children);
+        const index = children.findIndex((d) => d.TallyID === data.TallyID)
+        children[index].inputeBodr = true;
+        console.log('edit',children[index]);
+      },
 
     }
-  }
+   }
 </script>
