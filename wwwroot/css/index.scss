@@ -42,6 +42,26 @@ body{ margin:0;ul li{list-style-type :none;}}
       margin: 12px 0;
     }
   }
+  .el_content{
+    display: flex;
+    .elTree,.del_DataShow{
+      width: 50%;
+    }
+    .del_DataShow > div{
+      .el-tag{
+        margin-right: 5px;
+      }
+      .el-input{
+        width:290px ;
+      }
+      margin-bottom: 8px;
+      display: flex;
+    }
+  }
+  .el-input :focus{
+    background-color: #ffd494;
+    border-color: #ffd494;
+  }
 
   
   

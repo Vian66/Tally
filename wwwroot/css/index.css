@@ -56,4 +56,34 @@ body ul li {
 .elTree .el-tree-node {
   margin: 12px 0;
 }
+
+.el_content {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.el_content .elTree, .el_content .del_DataShow {
+  width: 50%;
+}
+
+.el_content .del_DataShow > div {
+  margin-bottom: 8px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.el_content .del_DataShow > div .el-tag {
+  margin-right: 5px;
+}
+
+.el_content .del_DataShow > div .el-input {
+  width: 290px;
+}
+
+.el-input :focus {
+  background-color: #ffd494;
+  border-color: #ffd494;
+}
 /*# sourceMappingURL=index.css.map */
