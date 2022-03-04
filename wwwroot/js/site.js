@@ -1,7 +1,6 @@
 ﻿window.onload=function(){
     _vue_init();
 }
-//import { defineAsyncComponent } from '../src/components/index.vue'
 function _vue_init() {
     var Main = {
         data() {

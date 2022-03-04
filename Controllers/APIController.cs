@@ -85,8 +85,46 @@ namespace Tally.Controllers
             jGetDataByte.Add (new JProperty ("EncodeServerName", oEncodeHelper.EnryptString ("W08DBRD01")));
             jGetDataByte.Add (new JProperty ("EncodeDBName", oEncodeHelper.EnryptString ("CS_V2_RD")));
             jGetDataByte.Add (new JProperty ("SPName", "TMT_SaveTally_Temp"));//預存存序名稱
-            jGetDataByte.Add (new JProperty ("SPName", oJObject["SPName"]));
             jGetDataByte.Add (new JProperty ("Param", oJObject));
+
+
+            //去呼叫另一支API,主要是連資料庫用的
+            byte[] resultByte = PostHttpRequest (jGetDataByte);
+            String ResultStr = oCompress.DecompressString (resultByte);
+            XElement xmlResult = new XElement ("Data");
+            xmlResult = XElement.Parse (ResultStr);
+            ResultStr = JsonConvert.SerializeObject (xmlResult);
+
+            return ResultStr;
+        }
+
+        //======Save tallyComplete======//
+        [HttpPost]
+        [Route ("[action]")]
+        public string SaveTallyComplete () {
+            JObject jGetDataByte = new JObject ();
+            jGetDataByte.Add (new JProperty ("EncodeServerName", oEncodeHelper.EnryptString ("W08DBRD01")));
+            jGetDataByte.Add (new JProperty ("EncodeDBName", oEncodeHelper.EnryptString ("CS_V2_RD")));
+            jGetDataByte.Add (new JProperty ("SPName", "TMT_SaveTallyComplete"));//預存存序名稱
+            //jGetDataByte.Add (new JProperty ("Param", oJObject));
+
+
+            //去呼叫另一支API,主要是連資料庫用的
+            byte[] resultByte = PostHttpRequest (jGetDataByte);
+            String ResultStr = oCompress.DecompressString (resultByte);
+            XElement xmlResult = new XElement ("Data");
+            xmlResult = XElement.Parse (ResultStr);
+            ResultStr = JsonConvert.SerializeObject (xmlResult);
+
+            return ResultStr;
+        }
+        //======ClearTally_Temp======//
+        public string ClearTallyTemp () {
+            JObject jGetDataByte = new JObject ();
+            jGetDataByte.Add (new JProperty ("EncodeServerName", oEncodeHelper.EnryptString ("W08DBRD01")));
+            jGetDataByte.Add (new JProperty ("EncodeDBName", oEncodeHelper.EnryptString ("CS_V2_RD")));
+            jGetDataByte.Add (new JProperty ("SPName","TMT_ClearSaveTally_Temp"));//預存存序名稱
+            //jGetDataByte.Add (new JProperty ("Param", oJObject));
 
 
             //去呼叫另一支API,主要是連資料庫用的
