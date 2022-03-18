@@ -242,8 +242,10 @@
               const tallyObj =  res.data.NewDataSet.QueryTally.reduce((obj,tally)=>{
                 tally['inputeBodr'] = false;
                 tally.Type ='Update';
-                tally.FullName = '5555'
-                tally.UserID = 'tpp06651'
+                tally.FullName = '5555';
+                tally.UserID = 'tpp06651';
+                tally.trotally =[];
+                tally.id = tally.TallyID
                 if(tally.DeleteFlag =='N'){
                   obj[tally.TallyLevel]
                     ? obj[tally.TallyLevel].push(tally) 
@@ -269,11 +271,15 @@
         })   
       },
       Temptable(){
-        this.testTall(this.tallys) 
+        this.testTall(this.tallys);
+        this.testTall(this.DelFlag);
       },
       testTall(e){
-         for(i=0; i<e.length; i++){
-          console.log('i',this.tallys[i]);
+        console.log('aaaa');
+         for(let i=0; i<e.length; i++){
+          // console.log(e[i]);
+          // console.log(i);
+          // console.log(e[i].TallyID);
           axios.post('https://localhost:5001/API/SaveTally',e[i])
            .then((res) => {
               console.log('成功Temp',res)
@@ -281,12 +287,13 @@
              .catch((err) => {
               console.log('失敗',err)  
             })  
-              if(e[i].trotally)
-              if(Object.keys(e[i].trotally).length!=0 && e[i].trotally){
-                this.testTall(e[i].trotally)
-              }
-             
-          
+                // if(e[i].trotally)
+                if(Object.keys(e[i].trotally).length!=0){
+                   console.log('Object Object Object');
+                  this.testTall(e[i].trotally)
+                }
+               
+                
           
         }    
       },
@@ -365,7 +372,6 @@
         pushChild.TallyID = data.TallyID+'0'+(tallyTag);
         pushChild.id = data.TallyID+'0'+(tallyTag);
         pushChild.TallyLevel = parseInt(data.TallyLevel) +(tallyLevel);
-        //pushChild.TallyLevel = parseInt(data.TallyLevel) +(tallyLevel);
         pushChild.TallyParent = children[index].TallyID
         pushChild.ProjectID = this.select;
         pushChild.Type ='Insert';
