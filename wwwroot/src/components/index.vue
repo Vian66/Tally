@@ -275,7 +275,6 @@
         this.testTall(this.DelFlag);
       },
       testTall(e){
-        console.log('aaaa');
          for(let i=0; i<e.length; i++){
           // console.log(e[i]);
           // console.log(i);
@@ -289,7 +288,6 @@
             })  
                 // if(e[i].trotally)
                 if(Object.keys(e[i].trotally).length!=0){
-                   console.log('Object Object Object');
                   this.testTall(e[i].trotally)
                 }
                
@@ -359,7 +357,7 @@
         const parent = node.parent;
         const children = parent.data.trotally || parent.data;
         const index = children.findIndex(d => d.TallyID === data.TallyID);
-        if (!data.trotally)data.trotally = [];//沒有資料就給空陣列
+        if(!data.trotally)data.trotally = [];//沒有資料就給空陣列
         let tallyTag = 1;
         let tallyLevel =1; 
          if(data.trotally.length >0){
@@ -382,10 +380,22 @@
         const parent = node.parent;
         const children = parent.data.trotally || parent.data;
         const index = children.findIndex(d => d.TallyID === data.TallyID);
-        children[index].DeleteFlag ='Y'
-        if(children[index].DeleteFlag ='Y')this.DelFlag.push(children[index])
-        children.splice(index, 1);
-        this.tallys = [...this.tallys];
+        children[index].DeleteFlag ='Y'   
+        this.DelFlag.push(children[index])
+        function Deltrotally(e){
+          for(let i=0;i<Object.keys(e).length;i++){
+            e[i].DeleteFlag ='Y';
+               console.log('this.DelFlag',__vm.$refs.indexcomponent.DelFlag);
+               __vm.$refs.indexcomponent.DelFlag.push(e[i])
+               if(e[i].trotally.length!=0)
+               Deltrotally(e[i].trotally)
+            }
+           }
+          if(Object.keys(children[index].trotally).length!=0){
+            Deltrotally(children[index].trotally)  
+          }
+           children.splice(index, 1);
+           this.tallys = [...this.tallys];
       },
       filterNode(value, data){
         if (!value) return true;

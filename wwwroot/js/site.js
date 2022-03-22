@@ -1,7 +1,10 @@
 ﻿window.onload=function(){
     _vue_init();
 }
+var Ctor;
+let __vm ;
 function _vue_init() {
+   
     var Main = {
         data() {
           return {
@@ -18,9 +21,9 @@ function _vue_init() {
           }
         }
       };   
-    var Ctor = Vue.extend(Main)
-    let __vm = new Ctor().$mount('#_vue_workplace')
-  
+       Ctor = Vue.extend(Main)
+       __vm = new Ctor().$mount('#_vue_workplace')
 }
+    
 
 
