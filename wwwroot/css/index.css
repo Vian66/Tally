@@ -86,4 +86,8 @@ body ul li {
   background-color: #ffd494;
   border-color: #ffd494;
 }
+
+span.iconTool {
+  border: 1px chartreuse;
+}
 /*# sourceMappingURL=index.css.map */

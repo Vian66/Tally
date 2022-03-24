@@ -4,6 +4,17 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <div class="container-fluid">
         <ul class="projectInfo">
+          <li>語系:</li>
+          <li>
+            <el-select v-model="lacaleID" placeholder="選擇語系">
+                 <el-option
+                  v-for="(item,i) in options"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                 >
+                </el-option>
+          </li>
           <li>專案:</li>
           <li>
             <el-select v-model="select" placeholder="請選擇專案"
@@ -34,12 +45,6 @@
               <el-switch v-model="tallys.DeleteFlag"></el-switch>
             </li>
             <li>顯示</li>
-            <!-- <li>Lang:</li>
-            <li>Zh</li>
-            <li>
-              <el-switch v-model="LocaleID"></el-switch>
-            </li>
-            <li>En</li> -->
             <li>First node:</li>
             <li><el-button size="small" type="primary" @click='addTallyinpute(tallys)'>Add</el-button></li>
             <li><el-upload
@@ -99,42 +104,67 @@
                               >
                               </el-input>
                                
-                              <span>
+                              <span class="iconTool" style="border: 1px chartreuse ;">
                                 <el-popover
                                     ref="popover"
                                     placement="right"
-                                    :width="232"
+                                    :width="280"
                                     trigger="click"
                                   >
-                                  <el-button 
-                                  type="primary" 
-                                  icon="el-icon-plus" circlsize="mini" circle 
-                                  @click="append(node,data)">
-                                  </el-button>
+                      
+                                    <el-button 
+                                    type="primary" 
+                                    icon="el-icon-plus" circlsize="mini" circle 
+                                    @click="append(node,data)">
+                                    </el-button>
 
-                                  <el-button 
-                                  type="info"  
-                                  icon="el-icon-upload2" circlsize="mini" circle 
-                                  v-on:click='handleCheckChange(node, data,"up")'>
-                                  </el-button>
+                                    <el-button 
+                                    type="info"  
+                                    icon="el-icon-upload2" circlsize="mini" circle 
+                                    v-on:click='handleCheckChange(node, data,"up")'>
+                                    </el-button>
 
-                                  <el-button 
-                                  type="info"
-                                  icon="el-icon-download" circlsize="mini" circle  
-                                  v-on:click='handleCheckChange(node, data,"down")'>
-                                  </el-button>
+                                    <el-button 
+                                    type="info"
+                                    icon="el-icon-download" circlsize="mini" circle  
+                                    v-on:click='handleCheckChange(node, data,"down")'>
+                                    </el-button>
 
-                                  <el-button
-                                  type="danger" 
-                                  icon="el-icon-delete-solid" circle 
-                                  @click="remove(node, data)">
-                                  </el-button>
+                                    <el-button
+                                    type="danger" 
+                                    icon="el-icon-delete-solid" circle 
+                                    @click="remove(node, data)">
+                                    </el-button>
+                                    <el-button
+                                    type="info" 
+                                    icon="el-icon-setting" circle 
+                                    @click="open()">
+                                    </el-button>
+
                                     <template #reference>
                                       <el-button size='mini' icon='el-icon-more'></el-button>
+                                      <!-- <el-dialog title="收货地址" :visible.sync="dialogFormVisible">
+                                          <el-form :model="form">
+                                            <el-form-item label="活动名称" :label-width="formLabelWidth">
+                                              <el-input v-model="form.name" autocomplete="off"></el-input>
+                                            </el-form-item>
+                                            <el-form-item label="活动区域" :label-width="formLabelWidth">
+                                              <el-select v-model="form.region" placeholder="请选择活动区域">
+                                                <el-option label="区域一" value="shanghai"></el-option>
+                                                <el-option label="区域二" value="beijing"></el-option>
+                                              </el-select>
+                                            </el-form-item>
+                                          </el-form>
+                                          <div slot="footer" class="dialog-footer">
+                                            <el-button @click="dialogFormVisible = false">取 消</el-button>
+                                            <el-button type="primary" @click="dialogFormVisible = false">确 定</el-button>
+                                          </div>
+                                        </el-dialog> -->
                                     </template>
+                                    
                                   </el-popover>
                               </span>
-                            </span>
+                    </span>
                     </template>
                             
                       
@@ -166,6 +196,8 @@
     data() {
       return {
         select:'',
+        lacaleID:'',
+        options: ['en-us','zh-tw'],
         value: false,
         filterText: '',
         filterDel:'',
@@ -177,18 +209,19 @@
         selectTally:[],
         tType:'',
         DelFlag:[],
-        LocaleID:'en-us',
         defaultTally : {
           TallyName:'',inputeBodr: false,
           TallyLevel:1,TallyID:1,
           trotally:[],id:1,
           TallyParent:0,SortCode:1,
           DeleteFlag:'N',ProjectID:'',
-          LocaleID:'zh-tw',SortCode:1,
-          NodeType:'DOCUMENT',FullName:'666',
+          LocaleID:'',SortCode:1,
+          NodeType:'DOCUMENT',FullName:'',
           UserID:'tpp06651',Type:''
         },
-        resData:{}
+        resData:{},
+        dialogFormVisible: false,
+
       }
       
     },
@@ -198,16 +231,14 @@
       },
       select(val){
         this.DelFlag =[];
+        if(this.lacaleID=="")
+        this.$message.error('請選擇語系');
       },
-      tallys:{
-          handler(newValue,oldValue) {
-            newValue.forEach((val, i, arr) => {
-                newValue[i].TallyName
-                //console.log('watch',newValue[i].TallyName);
-            })
-              
-          },deep: true
+      lacaleID(val){
+        console.log('lang',val);
+        this.contextTally()
       }
+      
     },
     created() {
       axios.post('https://localhost:5001/API/ReadTally',{})
@@ -218,18 +249,14 @@
     },
     methods: {
       contextTally(p){
+        console.log('this.lacaleID',this.lacaleID);
         let DeleteFlag = [];
-        axios.post('https://localhost:5001/API/SelectTally',{
-          ProjectID:p,
-                LocaleID:'zh-tw'
-                //LocaleID:this.LocaleID
-
-        })
+        axios.post('https://localhost:5001/API/SelectTally',{ProjectID:p,LocaleID:this.lacaleID})
         .then((res) => {
           //console.log('成功select',res)
           this.resData = res.data.NewDataSet.QueryTally
-             if(!res.data.NewDataSet?.QueryTally){
-               //console.log('this.tallys',this.tallys)
+             if(!res.data.NewDataSet?.QueryTally && this.lacaleID !=""){
+               console.log('this.tallys')
                 let alert = this.$notify({
                   title: '訊息',
                   message: `此專案ProjectID:${p}暫無資料`,
@@ -238,14 +265,14 @@
                 this.tallys = [];
                 return alert 
             }
-
               const tallyObj =  res.data.NewDataSet.QueryTally.reduce((obj,tally)=>{
                 tally['inputeBodr'] = false;
                 tally.Type ='Update';
-                tally.FullName = '5555';
+                //tally.FullName = tally.TallyName;
                 tally.UserID = 'tpp06651';
                 tally.trotally =[];
                 tally.id = tally.TallyID
+                tally.Channel ='';
                 if(tally.DeleteFlag =='N'){
                   obj[tally.TallyLevel]
                     ? obj[tally.TallyLevel].push(tally) 
@@ -262,7 +289,6 @@
                   parent['trotally'] 
                   ? parent['trotally'].push(tally) //有資料
                   : parent['trotally'] = [tally]   //沒資料Tally為空
-                 
                 }
               }
         })
@@ -276,9 +302,6 @@
       },
       testTall(e){
          for(let i=0; i<e.length; i++){
-          // console.log(e[i]);
-          // console.log(i);
-          // console.log(e[i].TallyID);
           axios.post('https://localhost:5001/API/SaveTally',e[i])
            .then((res) => {
               console.log('成功Temp',res)
@@ -290,9 +313,6 @@
                 if(Object.keys(e[i].trotally).length!=0){
                   this.testTall(e[i].trotally)
                 }
-               
-                
-          
         }    
       },
       Tallytable(){
@@ -320,10 +340,11 @@
               this.$message({message:'請選擇欲加入的專案',duration:1500})
             }else{
               let pushTally = JSON.parse(JSON.stringify(this.defaultTally));
-              pushTally.TallyID = parseInt(this.tallyTag+1) ;
+              pushTally.TallyID = parseInt(this.tallyTag+1);
               pushTally.id = parseInt(this.tallyTag+1);
               pushTally.ProjectID = this.select;
               pushTally.Type = 'Insert'
+              pushTally.LocaleID = this.lacaleID
               t.push(pushTally);
             }   
               inDir(t)
@@ -373,6 +394,7 @@
         pushChild.TallyParent = children[index].TallyID
         pushChild.ProjectID = this.select;
         pushChild.Type ='Insert';
+        pushChild.LocaleID = this.lacaleID;
         data.trotally.push(pushChild);//塞資料
         this.tallys = [...this.tallys];
       },
@@ -382,6 +404,9 @@
         const index = children.findIndex(d => d.TallyID === data.TallyID);
         children[index].DeleteFlag ='Y'   
         this.DelFlag.push(children[index])
+          if(Object.keys(children[index].trotally).length!=0){
+            Deltrotally(children[index].trotally)  
+          }
         function Deltrotally(e){
           for(let i=0;i<Object.keys(e).length;i++){
             e[i].DeleteFlag ='Y';
@@ -391,9 +416,6 @@
                Deltrotally(e[i].trotally)
             }
            }
-          if(Object.keys(children[index].trotally).length!=0){
-            Deltrotally(children[index].trotally)  
-          }
            children.splice(index, 1);
            this.tallys = [...this.tallys];
       },
@@ -402,6 +424,7 @@
         return data.TallyName.indexOf(value) !== -1;//回傳 -1，表示找不到
       },
       edit(node,data){
+        console.log('ddd');
         const parent = node.parent;
         const children = parent.data.trotally || parent.data;
         const index = children.findIndex((d) => d.TallyID === data.TallyID)
@@ -418,11 +441,43 @@
           const parent = node.parent;
           const children = parent.data.trotally || parent.data;
           const index = children.findIndex((d) => d.TallyID === data.TallyID)
-            console.log('resData',this.resData);
+          let fullname='';
+          if(children[index].TallyLevel !=1){
+            //console.log('children',typeof parseInt(children[index].TallyParent));
+            parInd = parseInt(children[index].TallyParent);
+            //console.log('parent',parent.data.TallyName);
+            children[index].FullName = parent.data.FullName + '.' +children[index].TallyName
+
+          }
+          if(children[index].TallyLevel >2){
+            console.log('TallyLevel >2');
+            let fname = children[index].FullName.split(".")
+            console.log('fname',fname);
+             let ar;
+            for(let i=0;i<fname.length;i++){
+              console.log('fname',fname[i]);
+              ar += ('.' +'[' + fname[i] +']');
+              children[index].FullName = ar;
+              console.log('ar',ar);
+            }
+           
+          }
           if(this.resData ==='undefined'){
             let res = this.resData.indexOf(children[index])
            return res ===-1 ? children[index].Type ='Insert' : children[index].Type ='Update'
           }          
+      },
+         open() {
+        this.$alert('这是一段内容', 'Channel', {
+
+          confirmButtonText: '确定',
+          callback: action => {
+            this.$message({
+              type: 'info',
+              message: `action: ${ action }`
+            });
+          }
+        });
       }
     }
    }
