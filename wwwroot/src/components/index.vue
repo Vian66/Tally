@@ -442,25 +442,15 @@
           const children = parent.data.trotally || parent.data;
           const index = children.findIndex((d) => d.TallyID === data.TallyID)
           let fullname='';
-          if(children[index].TallyLevel !=1){
-            //console.log('children',typeof parseInt(children[index].TallyParent));
-            parInd = parseInt(children[index].TallyParent);
-            //console.log('parent',parent.data.TallyName);
-            children[index].FullName = parent.data.FullName + '.' +children[index].TallyName
-
+          if(children[index].TallyLevel ==1){
+            children[index].FullName = children[index].TallyName;
           }
-          if(children[index].TallyLevel >2){
-            console.log('TallyLevel >2');
-            let fname = children[index].FullName.split(".")
-            console.log('fname',fname);
-             let ar;
-            for(let i=0;i<fname.length;i++){
-              console.log('fname',fname[i]);
-              ar += ('.' +'[' + fname[i] +']');
-              children[index].FullName = ar;
-              console.log('ar',ar);
-            }
-           
+          if(children[index].TallyLevel ==2){
+            parInd = parseInt(children[index].TallyParent);
+            children[index].FullName = `[${parent.data.FullName}].[${children[index].TallyName}]`
+          }
+          if(children[index].TallyLevel >2){ 
+            children[index].FullName = `${parent.data.FullName}.[${children[index].TallyName}]`
           }
           if(this.resData ==='undefined'){
             let res = this.resData.indexOf(children[index])
