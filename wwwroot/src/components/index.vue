@@ -8,7 +8,7 @@
           <li>
             <el-select v-model="lacaleID" placeholder="選擇語系">
                  <el-option
-                  v-for="(item,i) in options"
+                  v-for="(item) in options"
                   :key="item"
                   :label="item"
                   :value="item"
@@ -100,7 +100,7 @@
                               v-model="data.TallyName" 
                               placeholder="輸入内容" 
                               size="small"
-                              @change="tName(node,data)" 
+                              @input="tName(node,data)" 
                               >
                               </el-input>
                                
@@ -138,28 +138,12 @@
                                     <el-button
                                     type="info" 
                                     icon="el-icon-setting" circle 
-                                    @click="open()">
+                                    @click="channel('show',node, data,)">
                                     </el-button>
 
                                     <template #reference>
                                       <el-button size='mini' icon='el-icon-more'></el-button>
-                                      <!-- <el-dialog title="收货地址" :visible.sync="dialogFormVisible">
-                                          <el-form :model="form">
-                                            <el-form-item label="活动名称" :label-width="formLabelWidth">
-                                              <el-input v-model="form.name" autocomplete="off"></el-input>
-                                            </el-form-item>
-                                            <el-form-item label="活动区域" :label-width="formLabelWidth">
-                                              <el-select v-model="form.region" placeholder="请选择活动区域">
-                                                <el-option label="区域一" value="shanghai"></el-option>
-                                                <el-option label="区域二" value="beijing"></el-option>
-                                              </el-select>
-                                            </el-form-item>
-                                          </el-form>
-                                          <div slot="footer" class="dialog-footer">
-                                            <el-button @click="dialogFormVisible = false">取 消</el-button>
-                                            <el-button type="primary" @click="dialogFormVisible = false">确 定</el-button>
-                                          </div>
-                                        </el-dialog> -->
+                                      
                                     </template>
                                     
                                   </el-popover>
@@ -182,7 +166,24 @@
             </div>
           </div>
         </div>
-      
+            <el-dialog
+                title="Channel"
+                :visible.sync="dialogVisible"
+                width="30%"
+                >
+                {{checkboxGroup1}}
+                <h6>空白:預設全抓</h6>
+                <span>1:Phone  2:Chat  3:Email</span>
+                <el-checkbox-group v-model="checkboxGroup1" size="small">
+                  <el-checkbox label="1" border></el-checkbox>
+                  <el-checkbox label="2" border></el-checkbox>
+                  <el-checkbox label="3" border></el-checkbox>
+                </el-checkbox-group>
+                <span slot="footer" class="dialog-footer">
+                  <el-button @click="dialogVisible = false">取 消</el-button>
+                  <el-button type="primary" @click="channel('close')">确 定</el-button>
+                </span>
+            </el-dialog>
   </el-container>
 </template>
 <script>
@@ -195,6 +196,8 @@
     ],
     data() {
       return {
+        checkboxGroup1: [],
+        dialogVisible: false,
         select:'',
         lacaleID:'',
         options: ['en-us','zh-tw'],
@@ -235,7 +238,7 @@
         this.$message.error('請選擇語系');
       },
       lacaleID(val){
-        console.log('lang',val);
+        //console.log('lang',val);
         this.contextTally()
       }
       
@@ -249,14 +252,14 @@
     },
     methods: {
       contextTally(p){
-        console.log('this.lacaleID',this.lacaleID);
+        //console.log('this.lacaleID',this.lacaleID);
         let DeleteFlag = [];
         axios.post('https://localhost:5001/API/SelectTally',{ProjectID:p,LocaleID:this.lacaleID})
         .then((res) => {
           //console.log('成功select',res)
           this.resData = res.data.NewDataSet.QueryTally
              if(!res.data.NewDataSet?.QueryTally && this.lacaleID !=""){
-               console.log('this.tallys')
+               //console.log('this.tallys')
                 let alert = this.$notify({
                   title: '訊息',
                   message: `此專案ProjectID:${p}暫無資料`,
@@ -326,7 +329,7 @@
         })
       },
      async SaveTally(t){ 
-          console.log('n'); 
+          //console.log('n'); 
          const Temptable = this.Temptable()
          const Tallytable = await this.Tallytable()
       },
@@ -380,21 +383,34 @@
         const index = children.findIndex(d => d.TallyID === data.TallyID);
         if(!data.trotally)data.trotally = [];//沒有資料就給空陣列
         let tallyTag = 1;
-        let tallyLevel =1; 
+        let aID; 
          if(data.trotally.length >0){
-          let aID = data.trotally[data.trotally.length-1].TallyID;
-          let aLevel = data.trotally[data.trotally.length-1].TallyLevel;
+          aID = parseInt(data.trotally[data.trotally.length-1].TallyID);
           tallyTag += parseInt(aID[aID.length-1]);
-          tallyLevel += parseInt(aLevel[aLevel.length-1]);
          }
         let pushChild = JSON.parse(JSON.stringify(this.defaultTally));
-        pushChild.TallyID = data.TallyID+'0'+(tallyTag);
-        pushChild.id = data.TallyID+'0'+(tallyTag);
-        pushChild.TallyLevel = parseInt(data.TallyLevel) +(tallyLevel);
+        if(children[index].trotally.length==0 && children[index].TallyID){
+          console.log('id next');
+          pushChild.TallyID = data.TallyID+'0'+(tallyTag);
+          pushChild.id = data.TallyID+'0'+(tallyTag);
+        }else if(children[index].trotally.length>0 && children[index].TallyID){
+          console.log('aID',aID);
+          aID++
+          pushChild.TallyID = aID;
+          pushChild.id = aID;
+        }
         pushChild.TallyParent = children[index].TallyID
         pushChild.ProjectID = this.select;
         pushChild.Type ='Insert';
         pushChild.LocaleID = this.lacaleID;
+        if(children[index].trotally.length==0 && children[index].TallyParent==0 ||children[index].trotally.length>0 && children[index].TallyParent==0){
+          pushChild.TallyLevel +=1
+          console.log('children',pushChild.TallyLevel);//第二層
+        }else if(children[index].trotally.length==0 && children[index].TallyParent!=0 ||children[index].trotally.length>0 && children[index].TallyParent!=0){
+          pushChild.TallyLevel = parseInt(children[index].TallyLevel) + 1
+          console.log('children下',pushChild.TallyLevel);//往下子節點
+          
+        }
         data.trotally.push(pushChild);//塞資料
         this.tallys = [...this.tallys];
       },
@@ -403,7 +419,7 @@
         const children = parent.data.trotally || parent.data;
         const index = children.findIndex(d => d.TallyID === data.TallyID);
         children[index].DeleteFlag ='Y'   
-        this.DelFlag.push(children[index])
+        if(children[index].TallyName !='')this.DelFlag.push(children[index])
           if(Object.keys(children[index].trotally).length!=0){
             Deltrotally(children[index].trotally)  
           }
@@ -416,6 +432,9 @@
                Deltrotally(e[i].trotally)
             }
            }
+          //  this.DelFlag.forEach((val, i, arr) => {
+          //     console.log();
+          //  })
            children.splice(index, 1);
            this.tallys = [...this.tallys];
       },
@@ -438,10 +457,10 @@
         children[index].TallyID = Number(children[index].TallyID)
       },
       tName(node,data){
+        console.log('tName tName tName');
           const parent = node.parent;
           const children = parent.data.trotally || parent.data;
           const index = children.findIndex((d) => d.TallyID === data.TallyID)
-          let fullname='';
           if(children[index].TallyLevel ==1){
             children[index].FullName = children[index].TallyName;
           }
@@ -457,17 +476,25 @@
            return res ===-1 ? children[index].Type ='Insert' : children[index].Type ='Update'
           }          
       },
-         open() {
-        this.$alert('这是一段内容', 'Channel', {
+      channel(e,node,data,){
+        console.log(node);
+        console.log(data);
+        const parent = node.parent;
+        const children = parent.data.trotally || parent.data;
+        const index = children.findIndex((d) => d.TallyID === data.TallyID)
+            children[index].channel = this.checkboxGroup1
+            console.log('ii',children[index].channel);
+          switch(e){
+              case 'show':
+                console.log('show');
+                this.dialogVisible = true;
+                break;
+              case 'close':
+                //console.log('close');
+                this.dialogVisible = false;
+                break;
 
-          confirmButtonText: '确定',
-          callback: action => {
-            this.$message({
-              type: 'info',
-              message: `action: ${ action }`
-            });
           }
-        });
       }
     }
    }
