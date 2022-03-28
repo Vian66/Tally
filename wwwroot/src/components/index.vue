@@ -403,6 +403,7 @@
         pushChild.ProjectID = this.select;
         pushChild.Type ='Insert';
         pushChild.LocaleID = this.lacaleID;
+        pushChild.SortCode += parseInt(data.trotally[data.trotally.length-1].SortCode);
         if(children[index].trotally.length==0 && children[index].TallyParent==0 ||children[index].trotally.length>0 && children[index].TallyParent==0){
           pushChild.TallyLevel +=1
           console.log('children',pushChild.TallyLevel);//第二層
