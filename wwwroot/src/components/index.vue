@@ -256,7 +256,7 @@
         let DeleteFlag = [];
         axios.post('https://localhost:5001/API/SelectTally',{ProjectID:p,LocaleID:this.lacaleID})
         .then((res) => {
-          //console.log('成功select',res)
+          console.log('成功select',res)
           this.resData = res.data.NewDataSet.QueryTally
              if(!res.data.NewDataSet?.QueryTally && this.lacaleID !=""){
                //console.log('this.tallys')
@@ -271,10 +271,10 @@
               const tallyObj =  res.data.NewDataSet.QueryTally.reduce((obj,tally)=>{
                 tally['inputeBodr'] = false;
                 tally.Type ='Update';
-                //tally.FullName = tally.TallyName;
                 tally.UserID = 'tpp06651';
                 tally.trotally =[];
-                tally.id = tally.TallyID
+                tally.id = tally.TallyID;
+                //tally.SortCode = '' 
                 tally.Channel ='';
                 if(tally.DeleteFlag =='N'){
                   obj[tally.TallyLevel]
@@ -346,11 +346,12 @@
               pushTally.TallyID = parseInt(this.tallyTag+1);
               pushTally.id = parseInt(this.tallyTag+1);
               pushTally.ProjectID = this.select;
-              pushTally.Type = 'Insert'
+              pushTally.Type = 'Insert';
               pushTally.LocaleID = this.lacaleID
               t.push(pushTally);
             }   
-              inDir(t)
+            //if(res.data.NewDataSet)inDir(t)
+            inDir(t)
       },
       handleCheckChange(node,data,direct){
                   const parent = node.parent;
@@ -394,7 +395,6 @@
           pushChild.TallyID = data.TallyID+'0'+(tallyTag);
           pushChild.id = data.TallyID+'0'+(tallyTag);
         }else if(children[index].trotally.length>0 && children[index].TallyID){
-          console.log('aID',aID);
           aID++
           pushChild.TallyID = aID;
           pushChild.id = aID;
@@ -403,6 +403,7 @@
         pushChild.ProjectID = this.select;
         pushChild.Type ='Insert';
         pushChild.LocaleID = this.lacaleID;
+        if(children[index].trotally.length!=0 && children[index].SortCode)
         pushChild.SortCode += parseInt(data.trotally[data.trotally.length-1].SortCode);
         if(children[index].trotally.length==0 && children[index].TallyParent==0 ||children[index].trotally.length>0 && children[index].TallyParent==0){
           pushChild.TallyLevel +=1
