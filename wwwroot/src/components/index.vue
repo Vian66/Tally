@@ -100,7 +100,7 @@
                               v-model="data.TallyName" 
                               placeholder="輸入内容" 
                               size="small"
-                              @input="tName(node,data)" 
+                              @change="tName(node,data)" 
                               >
                               </el-input>
                                
@@ -138,7 +138,7 @@
                                     <el-button
                                     type="info" 
                                     icon="el-icon-setting" circle 
-                                    @click="channel('show',node, data,)">
+                                    @click="channel('show',node, data)">
                                     </el-button>
 
                                     <template #reference>
@@ -224,7 +224,7 @@
         },
         resData:{},
         dialogFormVisible: false,
-
+        name:''
       }
       
     },
@@ -240,6 +240,9 @@
       lacaleID(val){
         //console.log('lang',val);
         this.contextTally()
+      },
+      "tallys.TallyName":function(val){
+        console.log('TallyName',val);
       }
       
     },
@@ -274,7 +277,6 @@
                 tally.UserID = 'tpp06651';
                 tally.trotally =[];
                 tally.id = tally.TallyID;
-                //tally.SortCode = '' 
                 tally.Channel ='';
                 if(tally.DeleteFlag =='N'){
                   obj[tally.TallyLevel]
@@ -328,10 +330,24 @@
        
         })
       },
+      ClearTemp(){
+        axios.post('https://localhost:5001/API/ClearTemp',{
+          ProjectID:this.select,
+          LocaleID:this.lacaleID
+        })
+        .then((res) => {
+          console.log('ClearTemp',res)
+          console.log('this.select',this.select)
+        })
+        .catch((err) => {reject(err)})   
+      },
      async SaveTally(t){ 
-          //console.log('n'); 
-         const Temptable = this.Temptable()
+       try{
+         const Temptable = await this.Temptable()
          const Tallytable = await this.Tallytable()
+         const ClearTemp = await this.ClearTemp()
+       }catch(err){console.log('save-err',err);}
+         console.log('SaveTally end');
       },
       handleChange(file, fileList) {
         this.fileList = fileList.slice(-3);
@@ -350,7 +366,6 @@
               pushTally.LocaleID = this.lacaleID
               t.push(pushTally);
             }   
-            //if(res.data.NewDataSet)inDir(t)
             inDir(t)
       },
       handleCheckChange(node,data,direct){
@@ -378,7 +393,7 @@
                   }
       },
       append(node,data) { 
-        console.log('append');
+        console.log('append',data);
         const parent = node.parent;
         const children = parent.data.trotally || parent.data;
         const index = children.findIndex(d => d.TallyID === data.TallyID);
@@ -399,6 +414,8 @@
           pushChild.TallyID = aID;
           pushChild.id = aID;
         }
+        console.log('Name',pushChild.TallyName);
+        console.log('Name11',data.TallyName);
         pushChild.TallyParent = children[index].TallyID
         pushChild.ProjectID = this.select;
         pushChild.Type ='Insert';
@@ -407,14 +424,16 @@
         pushChild.SortCode += parseInt(data.trotally[data.trotally.length-1].SortCode);
         if(children[index].trotally.length==0 && children[index].TallyParent==0 ||children[index].trotally.length>0 && children[index].TallyParent==0){
           pushChild.TallyLevel +=1
-          console.log('children',pushChild.TallyLevel);//第二層
         }else if(children[index].trotally.length==0 && children[index].TallyParent!=0 ||children[index].trotally.length>0 && children[index].TallyParent!=0){
           pushChild.TallyLevel = parseInt(children[index].TallyLevel) + 1
-          console.log('children下',pushChild.TallyLevel);//往下子節點
-          
         }
         data.trotally.push(pushChild);//塞資料
+        //this.$set(data.trotally, data.trotally.length, pushChild);
+        const childInd = data.trotally[data.trotally.length-1]
+        console.log('childInd',childInd.TallyName);
         this.tallys = [...this.tallys];
+        //this.$forceUpdate();
+        //this.$set(data.trotally, data.trotally.length, pushChild);
       },
       remove(node, data) {
         const parent = node.parent;
@@ -463,6 +482,9 @@
           const parent = node.parent;
           const children = parent.data.trotally || parent.data;
           const index = children.findIndex((d) => d.TallyID === data.TallyID)
+          this.name = children[index].TallyName
+        console.log('TallyName',children[index].TallyName);
+        console.log('name',this.name);
           if(children[index].TallyLevel ==1){
             children[index].FullName = children[index].TallyName;
           }
@@ -476,9 +498,9 @@
           if(this.resData ==='undefined'){
             let res = this.resData.indexOf(children[index])
            return res ===-1 ? children[index].Type ='Insert' : children[index].Type ='Update'
-          }          
+          }       
       },
-      channel(e,node,data,){
+      channel(e,node,data){
         console.log(node);
         console.log(data);
         const parent = node.parent;
