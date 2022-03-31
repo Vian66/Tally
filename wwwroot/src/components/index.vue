@@ -58,7 +58,7 @@
           <li><el-button size="small" type="primary">匯出</el-button></li>
           </div>
           <li><el-button size="small" class="btn" type="primary"
-                @click="SaveTally(tallys)"
+                @click="SaveTally(tallys,DelFlag,select)"
               >Save</el-button></li>
         </ul>
       </div>
@@ -239,7 +239,7 @@
       },
       lacaleID(val){
         //console.log('lang',val);
-        this.contextTally()
+        //this.contextTally()
       },
       "tallys.TallyName":function(val){
         console.log('TallyName',val);
@@ -255,9 +255,10 @@
     },
     methods: {
       contextTally(p){
-        //console.log('this.lacaleID',this.lacaleID);
-        let DeleteFlag = [];
-        axios.post('https://localhost:5001/API/SelectTally',{ProjectID:p,LocaleID:this.lacaleID})
+        return new Promise((res,rej)=>{
+            res(axios.post('https://localhost:5001/API/SelectTally',{ProjectID:p,LocaleID:this.lacaleID}))
+            rej('context context context')
+        })
         .then((res) => {
           console.log('成功select',res)
           this.resData = res.data.NewDataSet.QueryTally
@@ -296,58 +297,61 @@
                   : parent['trotally'] = [tally]   //沒資料Tally為空
                 }
               }
-        })
-        .catch((err) => {
-          console.log('失敗',err)  
-        })   
+        }).catch((err) => {console.log(err);}) 
       },
-      Temptable(){
-        this.testTall(this.tallys);
-        this.testTall(this.DelFlag);
+      Temptable(t,d){
+        return new Promise((res,rej)=>{
+            res(this.testTall(this.tallys))
+            res(this.testTall(this.DelFlag))
+            rej('1Temptable--err')
+        })
       },
       testTall(e){
+        console.log('e',e);
          for(let i=0; i<e.length; i++){
           axios.post('https://localhost:5001/API/SaveTally',e[i])
            .then((res) => {
               console.log('成功Temp',res)
              })
              .catch((err) => {
-              console.log('失敗',err)  
+              console.log(err)  
             })  
-                // if(e[i].trotally)
+                //  if(e[i].trotally)
                 if(Object.keys(e[i].trotally).length!=0){
                   this.testTall(e[i].trotally)
                 }
         }    
       },
       Tallytable(){
-      return new Promise((resolve,reject)=>{
-        axios.post('https://localhost:5001/API/SaveTallyComplete')
+      return new Promise((res,rej)=>{
+        res(axios.post('https://localhost:5001/API/SaveTallyComplete'))
+        rej('2Tally--err')
         .then((res) => {
           console.log('成功Tally',res)
         })
-        .catch((err) => {reject(err)})   
-       
-        })
+        .catch((err) => {console.log(err);})   
+       })
       },
-      ClearTemp(){
-        axios.post('https://localhost:5001/API/ClearTemp',{
-          ProjectID:this.select,
-          LocaleID:this.lacaleID
+      ClearTemp(){   
+        return new Promise((res,rej)=>{
+          res(axios.post('https://localhost:5001/API/ClearTemp',{
+            ProjectID:this.select,
+            LocaleID:this.lacaleID
+          }))
+          rej('3Clear--err')
+          .then((res) => {
+            console.log('ClearTemp',res)
+          })
+          .catch((err) => {console.log(err);})
         })
-        .then((res) => {
-          console.log('ClearTemp',res)
-          console.log('this.select',this.select)
-        })
-        .catch((err) => {reject(err)})   
-      },
-     async SaveTally(t){ 
-       try{
+       },
+     async SaveTally(t,d,s){ 
+      try{
          const Temptable = await this.Temptable()
          const Tallytable = await this.Tallytable()
          const ClearTemp = await this.ClearTemp()
-       }catch(err){console.log('save-err',err);}
-         console.log('SaveTally end');
+         const contextTally = await this.contextTally(s)
+        }catch(err){console.log('save-err',err);}
       },
       handleChange(file, fileList) {
         this.fileList = fileList.slice(-3);
