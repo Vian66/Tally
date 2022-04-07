@@ -180,8 +180,8 @@
                   <el-checkbox label="3" border></el-checkbox>
                 </el-checkbox-group>
                 <span slot="footer" class="dialog-footer">
-                  <el-button @click="dialogVisible = false">取 消</el-button>
-                  <el-button type="primary" @click="channel('close')">确 定</el-button>
+                  <!-- <el-button @click="dialogVisible = false">取 消</el-button> -->
+                  <el-button type="primary" @click="this.dialogVisible = false">确 定</el-button>
                 </span>
             </el-dialog>
   </el-container>
@@ -220,7 +220,8 @@
           DeleteFlag:'N',ProjectID:'',
           LocaleID:'',SortCode:1,
           NodeType:'DOCUMENT',FullName:'',
-          UserID:'tpp06651',Type:''
+          UserID:'tpp06651',Type:'',
+          Channel:[]
         },
         resData:{},
         dialogFormVisible: false,
@@ -241,10 +242,19 @@
         //console.log('lang',val);
         //this.contextTally()
       },
-      "tallys.TallyName":function(val){
-        console.log('TallyName',val);
+      resData(val){
+        // console.log('delflag val',val);
+        // let delID = this.DelFlag.forEach((val, i, arr) => {return arr[i].TallyID})
+        //  if(this.resData){
+        //    //this.DelFlag =[];
+        //    //console.log('delflag val',this.DelFlag);
+        //    this.resData.forEach((val, i, arr) => {
+        //       if(arr[i].DeleteFlag=='Y')
+        //       arr[i].TallyID.indexOf(this.DelFlag)
+        //    })
+        //  }
+        //  console.log('delID',delID);
       }
-      
     },
     created() {
       axios.post('https://localhost:5001/API/ReadTally',{})
@@ -254,7 +264,7 @@
         .catch((err) => {console.log('失敗',err)})
     },
     methods: {
-      contextTally(p){
+      contextTally(p,d){
         return new Promise((res,rej)=>{
             res(axios.post('https://localhost:5001/API/SelectTally',{ProjectID:p,LocaleID:this.lacaleID}))
             rej('context context context')
@@ -263,7 +273,6 @@
           console.log('成功select',res)
           this.resData = res.data.NewDataSet.QueryTally
              if(!res.data.NewDataSet?.QueryTally && this.lacaleID !=""){
-               //console.log('this.tallys')
                 let alert = this.$notify({
                   title: '訊息',
                   message: `此專案ProjectID:${p}暫無資料`,
@@ -272,13 +281,13 @@
                 this.tallys = [];
                 return alert 
             }
+              this.DelFlag = [];
               const tallyObj =  res.data.NewDataSet.QueryTally.reduce((obj,tally)=>{
                 tally['inputeBodr'] = false;
                 tally.Type ='Update';
                 tally.UserID = 'tpp06651';
                 tally.trotally =[];
                 tally.id = tally.TallyID;
-                tally.Channel ='';
                 if(tally.DeleteFlag =='N'){
                   obj[tally.TallyLevel]
                     ? obj[tally.TallyLevel].push(tally) 
@@ -288,6 +297,7 @@
               },{})
               for(let i = Object.keys(tallyObj).length;i>=1;i--){           
                 this.tallys = tallyObj[1]
+                //console.log('tallyObj',tallyObj);
                 for(const tally of tallyObj[i]){
                   const parentId = tally.TallyParent
                   const parentIndex = tallyObj[i-1].findIndex(e=>e.TallyID===parentId)
@@ -323,14 +333,14 @@
         }    
       },
       Tallytable(){
-      return new Promise((res,rej)=>{
-        res(axios.post('https://localhost:5001/API/SaveTallyComplete'))
-        rej('2Tally--err')
-        .then((res) => {
-          console.log('成功Tally',res)
+        return new Promise((res,rej)=>{
+          res(axios.post('https://localhost:5001/API/SaveTallyComplete'))
+          rej('2Tally--err')
+          .then((res) => {
+            console.log('成功Tally',res)
+          })
+          .catch((err) => {console.log(err);})   
         })
-        .catch((err) => {console.log(err);})   
-       })
       },
       ClearTemp(){   
         return new Promise((res,rej)=>{
@@ -340,7 +350,7 @@
           }))
           rej('3Clear--err')
           .then((res) => {
-            console.log('ClearTemp',res)
+            console.log('ClearTemp')
           })
           .catch((err) => {console.log(err);})
         })
@@ -350,8 +360,8 @@
          const Temptable = await this.Temptable()
          const Tallytable = await this.Tallytable()
          const ClearTemp = await this.ClearTemp()
-         const contextTally = await this.contextTally(s)
-        }catch(err){console.log('save-err',err);}
+         const contextTally = await this.contextTally(s,d)
+        }catch(err){console.log('save-err',err)}
       },
       handleChange(file, fileList) {
         this.fileList = fileList.slice(-3);
@@ -456,7 +466,7 @@
                if(e[i].trotally.length!=0)
                Deltrotally(e[i].trotally)
             }
-           }
+            }
           //  this.DelFlag.forEach((val, i, arr) => {
           //     console.log();
           //  })
@@ -482,13 +492,10 @@
         children[index].TallyID = Number(children[index].TallyID)
       },
       tName(node,data){
-        console.log('tName tName tName');
           const parent = node.parent;
           const children = parent.data.trotally || parent.data;
           const index = children.findIndex((d) => d.TallyID === data.TallyID)
           this.name = children[index].TallyName
-        console.log('TallyName',children[index].TallyName);
-        console.log('name',this.name);
           if(children[index].TallyLevel ==1){
             children[index].FullName = children[index].TallyName;
           }
@@ -507,23 +514,35 @@
       channel(e,node,data){
         console.log(node);
         console.log(data);
+        this.dialogVisible = true;
+        this.comfirm(node,data)
+        // const parent = node.parent;
+        // const children = parent.data.trotally || parent.data;
+        // const index = children.findIndex((d) => d.TallyID === data.TallyID)
+              //children[index].Channel = this.checkboxGroup1
+               
+              
+          // switch(e){
+          //     case 'show':
+          //       console.log('show');
+          //       //this.dialogVisible = true;
+          //       this.comfirm(node,data)
+          //       break;
+          //     case 'close':
+          //       //console.log('close');
+          //       this.dialogVisible = false;
+          //       break;
+
+          // }
+      },
+      comfirm(node,data){
         const parent = node.parent;
         const children = parent.data.trotally || parent.data;
         const index = children.findIndex((d) => d.TallyID === data.TallyID)
-            children[index].channel = this.checkboxGroup1
-            console.log('ii',children[index].channel);
-          switch(e){
-              case 'show':
-                console.log('show');
-                this.dialogVisible = true;
-                break;
-              case 'close':
-                //console.log('close');
-                this.dialogVisible = false;
-                break;
-
-          }
+        console.log('chnl',children[index].Channel); 
+        console.log('2chnl',children[index]); 
       }
+
     }
    }
 </script>
