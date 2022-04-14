@@ -47,18 +47,24 @@
             <li>顯示</li>
             <li>First node:</li>
             <li><el-button size="small" type="primary" @click='addTallyinpute(tallys)'>Add</el-button></li>
-            <li><el-upload
-            class="upload-demo"
-            action="https://jsonplaceholder.typicode.com/posts/"
-            :on-change="handleChange">
-            <el-button size="small" type="primary">匯入</el-button>
-            <div slot="tip" class="el-upload__tip"></div>
-            
-          </el-upload></li>
+            <li>
+              <!-- <el-upload
+              class="upload-demo"
+              action=""
+              :on-preview="handlePreview"
+              :before-upload="beforeAvatarUpload"
+              :on-success="handleAvatarSuccess"
+              :on-change="handleChange">
+              <el-button size="small" type="primary">匯入</el-button>
+              <div slot="tip" class="el-upload__tip"></div>
+                <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上傳</el-button>  
+              </el-upload> -->
+             <input type="file" @change="importExcel"/>
+          </li>
           <li><el-button size="small" type="primary">匯出</el-button></li>
           </div>
           <li><el-button size="small" class="btn" type="primary"
-                @click="SaveTally(tallys,DelFlag,select)"
+                @click="SaveTally(tallys,DelFlag)"
               >Save</el-button></li>
         </ul>
       </div>
@@ -225,7 +231,8 @@
         },
         resData:{},
         dialogFormVisible: false,
-        name:''
+        name:'',
+        arr:[]
       }
       
     },
@@ -264,6 +271,14 @@
         .catch((err) => {console.log('失敗',err)})
     },
     methods: {
+      flatten(e){
+        for(let i=0; i<e.length; i++){
+          this.arr.push(e[i]);
+          if(Object.keys(e[i].trotally).length!=0){
+            this.flatten(e[i].trotally)
+          }
+        }       
+      },
       contextTally(p,d){
         return new Promise((res,rej)=>{
             res(axios.post('https://localhost:5001/API/SelectTally',{ProjectID:p,LocaleID:this.lacaleID}))
@@ -317,20 +332,18 @@
         })
       },
       testTall(e){
+        this.arr = [];
+        this.flatten(e)
         console.log('e',e);
-         for(let i=0; i<e.length; i++){
-          axios.post('https://localhost:5001/API/SaveTally',e[i])
+        let obj={tallys:this.arr};
+          axios.post('https://localhost:5001/API/SaveTally',obj)
            .then((res) => {
               console.log('成功Temp',res)
              })
              .catch((err) => {
               console.log(err)  
-            })  
-                //  if(e[i].trotally)
-                if(Object.keys(e[i].trotally).length!=0){
-                  this.testTall(e[i].trotally)
-                }
-        }    
+            })         
+           
       },
       Tallytable(){
         return new Promise((res,rej)=>{
@@ -355,7 +368,7 @@
           .catch((err) => {console.log(err);})
         })
        },
-     async SaveTally(t,d,s){ 
+     async SaveTally(t,d){ 
       try{
          const Temptable = await this.Temptable()
          const Tallytable = await this.Tallytable()
@@ -541,8 +554,77 @@
         const index = children.findIndex((d) => d.TallyID === data.TallyID)
         console.log('chnl',children[index].Channel); 
         console.log('2chnl',children[index]); 
-      }
+      },
+      beforeAvatarUpload(file) {
+        let Xls = file.name.split('.');
+        if(Xls[1] === 'xls'||Xls[1] === 'xlsx'){
+          return file
+        }else {
+          this.$message.error('上傳檔案只能是 xls/xlsx 格式!')
+        return false
+        }
+      },
+      handleAvatarSuccess(res,file) {
+        const files = URL.createObjectURL(file.raw);
+          console.log('upload res',files);
+          
+        //this.imageUrl = URL.createObjectURL(file.raw);
+      },
+      importExcel(obj){
+          let wb; //读取完成的数据
+          let aa = [];
+          let text = [];
+          let rABS = false; //是否将文件读取为二进制字符串
+          const file = obj.target.files[0];
+          console.log('importExcel',file);
+          const Xls = file.name.split('.');
+          const IMPORTFILE_MAXSIZE = 1 * 2048; //这里可以自定义控制导入文件大小
+          if(Xls[1] === 'xls'||Xls[1] === 'xlsx'){
+            let reader = new FileReader();
+            console.log('reader',reader);
+            reader.onload = function (e) {
+                let data = e.target.result;
+                if (rABS) {
+                    wb = XLSX.read(btoa(fixdata(data)), { //手动转化
+                        type: 'base64'
+                    });
+                } else {
+                    wb = XLSX.read(data, {
+                        type: 'binary'
+                    });
+                }
+                //wb.SheetNames[0]是获取Sheets中第一个Sheet的名字
+                //wb.Sheets[Sheet名]获取第一个Sheet的数据
+                this.tallys = JSON.stringify(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]));
+                console.log('this.tallys',this.tallys);
+                var u = eval('(' + this.tallys + ')');
+                // document.getElementById("demo").innerHTML = JSON.stringify(XLSX.utils.sheet_to_json(wb.Sheets[wb
+                //     .SheetNames[0]]));
+                console.log(wb.Sheets[wb.SheetNames[0]])
+                //获取表格中为address的那列存入text中
+                for (var i = 0; i < u.length; i++) {
+                    text.push(u[i].address);
+                }
 
+            };
+            if (rABS) {
+                reader.readAsArrayBuffer(file);
+            } else {
+                reader.readAsBinaryString(file);
+            }
+            return file
+          }else {
+            this.$message.error('上傳檔案只能是 xls/xlsx 格式!')
+          return false
+          }
+          if (file.size / 1024 > IMPORTFILE_MAXSIZE) {
+            this.$message.error('导入的表格文件不能大于2M')
+            return false
+          }
+          
+
+      }
+      
     }
    }
 </script>

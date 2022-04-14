@@ -9,6 +9,8 @@ using System.Xml.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Configuration; //for Config
+using System.Data;
+using System.Data.SqlClient;
 using Tally.MyClass;
 using Tally.Models;
 
@@ -80,21 +82,14 @@ namespace Tally.Controllers
         [HttpPost]
         [Route ("[action]")]
         public string SaveTally (JObject oJObject) {
-            JObject jGetDataByte = new JObject ();
-            jGetDataByte.Add (new JProperty ("EncodeServerName", oEncodeHelper.EnryptString ("W08DBRD01")));
-            jGetDataByte.Add (new JProperty ("EncodeDBName", oEncodeHelper.EnryptString ("CS_V2_RD")));
-            jGetDataByte.Add (new JProperty ("SPName", "TMT_SaveTally_Temp"));//預存存序名稱
-            jGetDataByte.Add (new JProperty ("Param", oJObject));
-
-
-            //去呼叫另一支API,主要是連資料庫用的
-            byte[] resultByte = PostHttpRequest (jGetDataByte);
-            String ResultStr = oCompress.DecompressString (resultByte);
-            XElement xmlResult = new XElement ("Data");
-            xmlResult = XElement.Parse (ResultStr);
-            ResultStr = JsonConvert.SerializeObject (xmlResult);
-
-            return ResultStr;
+            DataTable db = new DataTable();          
+            db = JsonConvert.DeserializeObject<DataTable>(oJObject["tallys"].ToString());
+            db.Columns.Remove("inputeBodr");
+            db.Columns.Remove("UserID");
+            db.Columns.Remove("Type");
+            db.Columns.Remove("trotally");
+            BulkCopy(db);
+            return "";
         }
 
         //======Save tallyComplete======//
@@ -106,8 +101,6 @@ namespace Tally.Controllers
             jGetDataByte.Add (new JProperty ("EncodeDBName", oEncodeHelper.EnryptString ("CS_V2_RD")));
             jGetDataByte.Add (new JProperty ("SPName", "TMT_SaveTallyComplete"));//預存存序名稱
             //jGetDataByte.Add (new JProperty ("Param", oJObject));
-
-
             //去呼叫另一支API,主要是連資料庫用的
             byte[] resultByte = PostHttpRequest (jGetDataByte);
             String ResultStr = oCompress.DecompressString (resultByte);
@@ -126,9 +119,6 @@ namespace Tally.Controllers
             jGetDataByte.Add (new JProperty ("EncodeDBName", oEncodeHelper.EnryptString ("CS_V2_RD")));
             jGetDataByte.Add (new JProperty ("SPName", "TMT_ClearSaveTally_Temp"));//預存存序名稱
             jGetDataByte.Add (new JProperty ("Param", oJObject));
-
-
-
             //去呼叫另一支API,主要是連資料庫用的
             byte[] resultByte = PostHttpRequest (jGetDataByte);
             String ResultStr = oCompress.DecompressString (resultByte);
@@ -171,8 +161,43 @@ namespace Tally.Controllers
 
             return null;
         }
-        //API是負責連結資料庫用成站台方便大家共用，不用每次進行編碼編碼，並且傳參數接
+        //OneDBAPI是負責連結資料庫用成站台方便大家共用，不用每次進行編碼編碼，並且傳參數接
         //資料庫的值，處理方式都寫在這支API裡
 
+        private void  BulkCopy(System.Data.DataTable dt)
+        {
+            //  整批轉入
+            string sConn = "data source = w08dbrd01;initial catalog= CS_V2_RD; user id = tecs ;password= tecspass ";
+
+            using (SqlConnection conn = new SqlConnection(sConn))
+            {
+                conn.Open();
+                using (SqlBulkCopy sqlBC = new SqlBulkCopy(conn))
+                {
+                    //設定一個批次量寫入多少筆資料
+                    sqlBC.BatchSize = 1000;
+                    
+                    //設定逾時的秒數
+                    sqlBC.BulkCopyTimeout = 60;
+
+                    //設定要寫入的資料表
+                    sqlBC.DestinationTableName = "Tally_Temp";
+
+                    //對應資料行
+                    sqlBC.ColumnMappings.Add("ProjectID", "ProjectID");
+                    sqlBC.ColumnMappings.Add("LocaleID", "LocaleID");
+                    sqlBC.ColumnMappings.Add("TallyID", "TallyID"); 
+                    sqlBC.ColumnMappings.Add("TallyName", "TallyName"); 
+                    sqlBC.ColumnMappings.Add("FullName", "FullName"); 
+                    sqlBC.ColumnMappings.Add("TallyLevel", "TallyLevel"); 
+                    sqlBC.ColumnMappings.Add("TallyParent", "TallyParent"); 
+                    sqlBC.ColumnMappings.Add("SortCode", "SortCode"); 
+                    sqlBC.ColumnMappings.Add("DeleteFlag", "DeleteFlag"); 
+                    sqlBC.ColumnMappings.Add("NodeType", "NodeType"); 
+                    //開始寫入
+                    sqlBC.WriteToServer(dt);
+                }
+            }
+        } 
     }
 }
