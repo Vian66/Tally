@@ -277,7 +277,7 @@
           if(Object.keys(e[i].trotally).length!=0){
             this.flatten(e[i].trotally)
           }
-        }       
+        } 
       },
       contextTally(p,d){
         return new Promise((res,rej)=>{
@@ -579,7 +579,7 @@
           console.log('importExcel',file);
           const Xls = file.name.split('.');
           const IMPORTFILE_MAXSIZE = 1 * 2048; //这里可以自定义控制导入文件大小
-          if(Xls[1] === 'xls'||Xls[1] === 'xlsx'){
+          if(Xls[1] === 'xls'|| Xls[1] === 'xlsx'){
             let reader = new FileReader();
             console.log('reader',reader);
             reader.onload = function (e) {
